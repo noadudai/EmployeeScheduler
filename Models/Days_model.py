@@ -3,8 +3,8 @@ from Models.Shifts_model import Shifts
 
 # A method or attribute with a single underscore prefix is considered non-public.
 
-# add preferences as "Tuesday morning shift".
-# add day-offs as "Tuesday"
+# add preferences for example "Tuesday morning shift".
+# add day-offs for example "Tuesday"
 
 class Day:
     DELIVERY_DAY_EVENING_START_SHIFT_KEY = "15:00"
