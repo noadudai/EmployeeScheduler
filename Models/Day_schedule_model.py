@@ -7,9 +7,10 @@ from Models.Day_model import DayModel
 
 class DayScheduleModel(DayModel):
 
-    def __init__(self, day_of_the_week: str):
+    def __init__(self, day_of_the_week: str, shifts):
         super().__init__(day_of_the_week)
-        self._initialize_shifts()
+        self.shifts = shifts
+        # self._initialize_shifts()
 
     # using polymorphism, so that the shifts list will have a list of different shift types.
     def _init_shifts_sun_to_wed(self) -> None:
