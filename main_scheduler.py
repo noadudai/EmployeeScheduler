@@ -98,6 +98,8 @@ def create_schedule(employees: List[Employee]):
     for employee in all_employees:
         model.Add(total_shifts_worked[employee] <= max_shifts_a_week)
 
+    # a constraint that ensures that only an employee that asked for a day-off in advanced, he will get that day-off.
+    # and if not, the solver will assign an employee based on needs.
     for employee in all_employees:
         for day in all_days:
             if day > 3 and day in employees[employee].days_off:
@@ -167,8 +169,8 @@ if __name__ == "__main__":
     employees_names = ['Noa', 'Chepo', 'diamond', 'Alona', 'Beny', 'Misha', 'Liran']
     employees_priority = [5, 4, 2, 3, 4, 3, 3]
     employees_preferences = [
-        [[0, 0, 0], [0, 0, 0], [0, 1, 0], [0, 1, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 1, 0]],
-        [[1, 0, 0], [0, 0, 0], [0, 1, 1], [0, 1, 1], [0, 0, 1, 1], [1, 1, 1, 1], [1, 1, 1, 1]],
+        [[0, 1, 0], [0, 1, 0], [0, 1, 0], [0, 1, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 1, 0]],
+        [[1, 0, 0], [0, 0, 0], [0, 0, 0], [0, 1, 1], [0, 0, 1, 1], [0, 0, 0, 0], [0, 0, 0, 0]],
         [[1, 1, 1], [1, 1, 1], [1, 1, 1], [0, 0, 0], [1, 1, 1, 1], [1, 1, 1, 1], [1, 1, 1, 1]],
         [[1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1, 1], [0, 0, 0, 0], [0, 0, 0, 0]],
         [[0, 0, 0], [0, 0, 0], [0, 0, 0], [1, 1, 1], [0, 0, 1, 1], [1, 0, 0, 0], [0, 0, 1, 1]],
