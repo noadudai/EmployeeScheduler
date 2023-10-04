@@ -1,4 +1,5 @@
 from typing import List
+from ortools.sat.python import cp_model
 
 from Models.Day_model import DayModel
 from Models.Employee_model import Employee
@@ -6,33 +7,8 @@ from Models.Day_schedule_model import DayScheduleModel
 from Models.Day_preferences_model import DayPreferencesModel
 from Models.Shifts_model import *  # ClosingShift, MorningShift, EveningShift, WeekendMorningShift, WeekendMorningBackupShift, ThursdayBackupShift
 from Models.Workers_week_schedule import WorkersWeekScheduleModel
+from constraints_file import *
 
-from ortools.sat.python import cp_model
-
-
-# A function that will add constraints based on the day and the employees in that day, preventing 2 new employees
-# from being in the same shift together (evening and closing on Sun-Wed,
-# morning and backup on Fri-San and evening and closing on Fri-Sat).
-def add_constraint_of_no_2_employees(shift1, shift2, day: int, shifts: dict,
-                                     employees: List[Employee], model):
-    new_employee_1 = sum(shifts[(employee.name, day, shift1.__name__)] for employee in employees if employee.is_new)
-    new_employee_2 = sum(shifts[(employee.name, day, shift2.__name__)] for employee in employees if employee.is_new)
-
-    # The solver will try different combinations of values for these booleans while exploring the solution space
-    # to find a valid assignment of employees to shifts that satisfies all constraints
-    condition_shift1 = model.NewBoolVar(f"condition_shift1_{day}")
-    condition_shift2 = model.NewBoolVar(f"condition_shift2_{day}")
-
-    # if there's at least one new employee on shift1, condition_shift1 must be true,
-    # and if there's no new employee on shift1, condition_shift1 must be false.
-    model.Add(new_employee_1 >= 1).OnlyEnforceIf(condition_shift1)
-    model.Add(new_employee_1 == 0).OnlyEnforceIf(condition_shift1.Not())
-
-    model.Add(new_employee_2 >= 1).OnlyEnforceIf(condition_shift2)
-    model.Add(new_employee_2 == 0).OnlyEnforceIf(condition_shift2.Not())
-
-    # Implication: if there's a new employee on shift1, there cannot be a new employee on shift2
-    model.AddBoolOr([condition_shift1.Not(), condition_shift2.Not()])
 
 
 def create_schedule(employees: List[Employee], week_info: WorkersWeekScheduleModel):
@@ -40,12 +16,8 @@ def create_schedule(employees: List[Employee], week_info: WorkersWeekScheduleMod
     NUMBER_OF_DAYS_A_WEEK_KEY = 7
     this_week = week_info
 
-    # The length of the shifts list in each day, is the number of shifts in a day.
-    shifts_per_day = [len(this_week.week[day].shifts) for day in range(NUMBER_OF_DAYS_A_WEEK_KEY)]
-    # assert(shifts_per_day == [3, 3, 3, 3, 4, 4, 4])
-
-    # The max shifts for an employee in a week is 6 by law.
-    max_shifts_in_a_week = 6
+    # The max working days for an employee in a week is 6 by law.
+    max_working_days_in_a_week = 6
 
     # The 'Constraint Programming' model
     model = cp_model.CpModel()
@@ -55,11 +27,12 @@ def create_schedule(employees: List[Employee], week_info: WorkersWeekScheduleMod
     # A dictionary that will hold employees as a (employee, day, shift)  as a key, snd a
     # boolean value of 1 or 0 if that employee is working on that day on that shift.
     shifts = {}
-    for employee in employees:
-        for day in range(len(this_week.week)):
-            for shift in this_week.week[day].shifts:
-                # shift.__class__.__name__ == the name of the class (for example "MorningShift")
-                shifts[(employee.name, day, shift.__class__.__name__)] = model.NewBoolVar(f"shift_employee{employee.name}_day{day}_shift{shift.__class__.__name__}")
+    populate_shifts_dict_for_cp_model(employees, this_week, model, shifts)
+    # for employee in employees:
+    #     for day in range(len(this_week.week)):
+    #         for shift in this_week.week[day].shifts:
+    #             # shift.__class__.__name__ == the name of the class (for example "MorningShift")
+    #             shifts[(employee.name, day, shift.__class__.__name__)] = model.NewBoolVar(f"shift_employee{employee.name}_day{day}_shift{shift.__class__.__name__}")
 
     # A constraint that there will be only one employee in each shift per day
     for day in range(len(this_week.week)):
@@ -90,7 +63,7 @@ def create_schedule(employees: List[Employee], week_info: WorkersWeekScheduleMod
                                                  shift in this_week.week[day].shifts)
 
     for employee in employees:
-        model.Add(total_shifts_worked[employee.name] <= max_shifts_in_a_week)
+        model.Add(total_shifts_worked[employee.name] <= max_working_days_in_a_week)
 
     # A constraint that ensures that only an employee who asked for a day-off in advance will get that day off.
     # And if not, the solver will assign an employee based on needs.
