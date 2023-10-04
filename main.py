@@ -10,7 +10,6 @@ from Models.Workers_week_schedule import WorkersWeekScheduleModel
 from constraints_file import *
 
 
-
 def create_schedule(employees: List[Employee], week_info: WorkersWeekScheduleModel):
     # The last time I checked there were 7 days in a week (LOL😂).
     NUMBER_OF_DAYS_A_WEEK_KEY = 7
