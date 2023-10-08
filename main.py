@@ -10,6 +10,9 @@ from Models.Workers_week_schedule import WorkersWeekScheduleModel
 from constraints_file import *
 
 
+
+
+
 def create_schedule(employees: List[Employee], week_info: WorkersWeekScheduleModel):
     # The last time I checked there were 7 days in a week (LOL😂).
     NUMBER_OF_DAYS_A_WEEK_KEY = 7
@@ -26,43 +29,16 @@ def create_schedule(employees: List[Employee], week_info: WorkersWeekScheduleMod
     # A dictionary that will hold employees as a (employee, day, shift)  as a key, snd a
     # boolean value of 1 or 0 if that employee is working on that day on that shift.
     shifts = {}
+
     populate_shifts_dict_for_cp_model(employees, this_week, model, shifts)
-    # for employee in employees:
-    #     for day in range(len(this_week.week)):
-    #         for shift in this_week.week[day].shifts:
-    #             # shift.__class__.__name__ == the name of the class (for example "MorningShift")
-    #             shifts[(employee.name, day, shift.__class__.__name__)] = model.NewBoolVar(f"shift_employee{employee.name}_day{day}_shift{shift.__class__.__name__}")
 
-    # A constraint that there will be only one employee in each shift per day
-    for day in range(len(this_week.week)):
-        for shift in this_week.week[day].shifts:
-            model.AddExactlyOne(shifts[(employee.name, day, shift.__class__.__name__)] for employee in employees)
+    one_employee_in_each_shift_constraint(this_week, employees, model, shifts)
 
-    # A constraint that each employee works at most one shift per day
-    for employee in employees:
-        for day in range(len(this_week.week)):
-            model.AddAtMostOne(shifts[(employee.name, day, shift.__class__.__name__)] for shift in this_week.week[day].shifts)
+    at_most_one_shift_a_day_constraint(this_week, employees, model, shifts)
 
-    # A constraint that ensures that on a given day, there are is no new employee in evening shift and a new employee
-    # in closing shift, and in the weekends, no 2 new employee in morning and backup shifts.
-    for day in range(len(this_week.week)):
-        if this_week.week[day].day != "Thursday":
-            if any(isinstance(shift, EveningShift) for shift in this_week.week[day].shifts) and any(
-                    isinstance(shift, ClosingShift) for shift in this_week.week[day].shifts):
-                add_constraint_of_no_2_employees(EveningShift, ClosingShift, day, shifts, employees, model)
-            if any(isinstance(shift, WeekendMorningShift) for shift in this_week.week[day].shifts) and any(
-                    isinstance(shift, WeekendMorningBackupShift) for shift in this_week.week[day].shifts):
-                add_constraint_of_no_2_employees(WeekendMorningShift, WeekendMorningBackupShift, day, shifts, employees, model)
+    prevent_new_employees_working_together_constraint(this_week, employees, model, shifts)
 
-    # A constraint that ensures that each employee does not work more than 6 days in a week
-    total_shifts_worked = {}
-    for employee in employees:
-        total_shifts_worked[employee.name] = sum(shifts[(employee.name, day, shift.__class__.__name__)] for
-                                                 day in range(len(this_week.week)) for
-                                                 shift in this_week.week[day].shifts)
-
-    for employee in employees:
-        model.Add(total_shifts_worked[employee.name] <= max_working_days_in_a_week)
+    no_more_that_6_working_days_a_week_constraint(this_week, employees, model, shifts)
 
     # A constraint that ensures that only an employee who asked for a day-off in advance will get that day off.
     # And if not, the solver will assign an employee based on needs.
