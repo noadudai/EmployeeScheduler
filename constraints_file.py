@@ -82,3 +82,33 @@ def no_more_that_6_working_days_a_week_constraint(week_info: WorkersWeekSchedule
 
     for employee in employees:
         model.Add(total_shifts_worked[employee.name] <= max_working_days_in_a_week)
+
+
+# A constraint that ensures that only an employee who asked for a day-off in advance will get that day off.
+# And if not, the solver will assign an employee based on needs.
+def employee_day_off_request_constraint(week_info: WorkersWeekScheduleModel, employees: List[Employee],
+                                        model, shifts):
+    for employee in employees:
+        for day in range(len(week_info.week)):
+            if day > 3 and week_info.week[day].day in [day_off.day for day_off in employee.days_off]:
+                for shift in week_info.week[day].shifts:
+                    model.Add(shifts[(employee.name, day, shift.__class__.__name__)] == 0).OnlyEnforceIf(
+                        employee.day_off_requested)
+
+
+# A constraint that ensures that an employee how is working on a closing shift,
+# will not work a morning shift on the day after.
+def no_opening_shift_after_closing_shift_constraint(week_info: WorkersWeekScheduleModel, employees: List[Employee],
+                                        model, shifts):
+    for day in range(1, len(week_info.week)):  # Start from mon (not the sun)
+        for employee in employees:
+            # A boolean indicating if the employee worked a closing shift yesterday.
+            worked_closing_shift_yesterday = model.NewBoolVar(f"{employee.name}_worked_closing_shift_yesterday_day{day}")
+
+            model.Add(worked_closing_shift_yesterday == shifts.get((employee.name, day - 1, ClosingShift.__name__), 0))
+
+            # If worked_closing_shift_yesterday is true, the employee cannot work a morning shift on the current day
+            if day >= 5:
+                model.Add(worked_closing_shift_yesterday + shifts.get((employee.name, day, WeekendMorningShift.__name__), 0) <= 1)
+            else:
+                model.Add(worked_closing_shift_yesterday + shifts.get((employee.name, day, MorningShift.__name__), 0) <= 1)

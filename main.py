@@ -1,16 +1,9 @@
-from typing import List
 from ortools.sat.python import cp_model
 
 from Models.Day_model import DayModel
-from Models.Employee_model import Employee
 from Models.Day_schedule_model import DayScheduleModel
 from Models.Day_preferences_model import DayPreferencesModel
-from Models.Shifts_model import *  # ClosingShift, MorningShift, EveningShift, WeekendMorningShift, WeekendMorningBackupShift, ThursdayBackupShift
-from Models.Workers_week_schedule import WorkersWeekScheduleModel
 from constraints_file import *
-
-
-
 
 
 def create_schedule(employees: List[Employee], week_info: WorkersWeekScheduleModel):
@@ -18,13 +11,8 @@ def create_schedule(employees: List[Employee], week_info: WorkersWeekScheduleMod
     NUMBER_OF_DAYS_A_WEEK_KEY = 7
     this_week = week_info
 
-    # The max working days for an employee in a week is 6 by law.
-    max_working_days_in_a_week = 6
-
     # The 'Constraint Programming' model
     model = cp_model.CpModel()
-
-    # Adding variables and constraints to the model:
 
     # A dictionary that will hold employees as a (employee, day, shift)  as a key, snd a
     # boolean value of 1 or 0 if that employee is working on that day on that shift.
@@ -40,29 +28,9 @@ def create_schedule(employees: List[Employee], week_info: WorkersWeekScheduleMod
 
     no_more_that_6_working_days_a_week_constraint(this_week, employees, model, shifts)
 
-    # A constraint that ensures that only an employee who asked for a day-off in advance will get that day off.
-    # And if not, the solver will assign an employee based on needs.
-    for employee in employees:
-        for day in range(len(this_week.week)):
-            if day > 3 and this_week.week[day].day in [day_off.day for day_off in employee.days_off]:
-                for shift in this_week.week[day].shifts:
-                    model.Add(shifts[(employee.name, day, shift.__class__.__name__)] == 0).OnlyEnforceIf(
-                        employee.day_off_requested)
+    employee_day_off_request_constraint(this_week, employees, model, shifts)
 
-    # A constraint that ensures that an employee how is working on a closing shift,
-    # will not work a morning shift on the day after.
-    for day in range(1, len(this_week.week)):  # Start from mon (not the sun)
-        for employee in employees:
-            # A boolean indicating if the employee worked a closing shift yesterday.
-            worked_closing_shift_yesterday = model.NewBoolVar(f"{employee.name}_worked_closing_shift_yesterday_day{day}")
-
-            model.Add(worked_closing_shift_yesterday == shifts.get((employee.name, day - 1, ClosingShift.__name__), 0))
-
-            # If worked_closing_shift_yesterday is true, the employee cannot work a morning shift on the current day
-            if day >= 5:
-                model.Add(worked_closing_shift_yesterday + shifts.get((employee.name, day, WeekendMorningShift.__name__), 0) <= 1)
-            else:
-                model.Add(worked_closing_shift_yesterday + shifts.get((employee.name, day, MorningShift.__name__), 0) <= 1)
+    no_opening_shift_after_closing_shift_constraint(this_week, employees, model, shifts)
 
     objective_terms = []
 
