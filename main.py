@@ -1,9 +1,13 @@
+from typing import List
 from ortools.sat.python import cp_model
 
 from Models.Day_model import DayModel
 from Models.Day_schedule_model import DayScheduleModel
 from Models.Day_preferences_model import DayPreferencesModel
-from constraints_file import *
+from Models.Constraint_model import ConstraintModel
+from Models.Employee_model import Employee
+from Models.Workers_week_schedule import WorkersWeekScheduleModel
+from Models.Shifts_model import *
 
 
 def create_schedule(employees: List[Employee], week_info: WorkersWeekScheduleModel):
@@ -18,15 +22,16 @@ def create_schedule(employees: List[Employee], week_info: WorkersWeekScheduleMod
     # boolean value of 1 or 0 if that employee is working on that day on that shift.
     shifts = {}
 
+    constraint_model = ConstraintModel(week_info, employees, model, shifts)
+
     # Adding variables and constraint to the model.
-    populate_shifts_dict_for_cp_model(employees, this_week, model, shifts)
-    one_employee_in_each_shift_constraint(this_week, employees, model, shifts)
-    at_most_one_shift_a_day_constraint(this_week, employees, model, shifts)
-    prevent_new_employees_working_together_constraint(this_week, employees, model, shifts)
-    no_more_that_6_working_days_a_week_constraint(this_week, employees, model, shifts)
-    employee_day_off_request_constraint(this_week, employees, model, shifts)
-    no_opening_shift_after_closing_shift_constraint(this_week, employees, model, shifts)
-    objective_function(this_week, employees, model, shifts)
+    constraint_model.one_employee_in_each_shift_constraint()
+    constraint_model.at_most_one_shift_a_day_constraint()
+    constraint_model.prevent_new_employees_working_together_constraint()
+    constraint_model.no_more_that_6_working_days_a_week_constraint()
+    constraint_model.employee_day_off_request_constraint()
+    constraint_model.no_opening_shift_after_closing_shift_constraint()
+    constraint_model.objective_function()
 
     # Creates the solver and solve.
     solver = cp_model.CpSolver()
