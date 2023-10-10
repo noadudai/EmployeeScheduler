@@ -9,3 +9,4 @@ class WorkersWeekScheduleModel:
 
     def add_solution(self, solution: List[DayScheduleModel]):
         self.solutions.append(solution)
+
