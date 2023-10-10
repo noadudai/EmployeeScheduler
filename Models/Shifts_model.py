@@ -1,49 +1,14 @@
 class Shifts:
-    def __init__(self):
+    MORNING_SHIFT_KEY = "morning"
+    EVENING_SHIFT_KEY = "evening"
+    CLOSING_SHIFT_KEY = "closing"
+    WEEKEND_MORNING_SHIFT_KEY = "weekend morning"
+    WEEKEND_MORNING_BACKUP_SHIFT_KEY = "weekend morning backup"
+    THURSDAY_BACKUP_SHIFT_KEY = "thursday backup"
+
+    def __init__(self, shift_type):
         self.worker_name = ""
-        self.shift_type = ""
+        self.shift_type = shift_type
 
     def set_worker_name(self, name):
         self.worker_name = name
-
-
-class MorningShift(Shifts):
-    def __init__(self):
-        super().__init__()
-
-        self.shift_type = "morning"
-
-
-class EveningShift(Shifts):
-    def __init__(self):
-        super().__init__()
-
-        self.shift_type = "evening"
-
-
-class ClosingShift(Shifts):
-    def __init__(self):
-        super().__init__()
-
-        self.shift_type = "closing"
-
-
-class ThursdayBackupShift(Shifts):
-    def __init__(self):
-        super().__init__()
-
-        self.shift_type = "thursday backup"
-
-
-class WeekendMorningShift(Shifts):
-    def __init__(self):
-        super().__init__()
-
-        self.shift_type = "weekend morning"
-
-
-class WeekendMorningBackupShift(Shifts):
-    def __init__(self):
-        super().__init__()
-
-        self.shift_type = "weekend morning backup"
