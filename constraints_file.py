@@ -112,3 +112,24 @@ def no_opening_shift_after_closing_shift_constraint(week_info: WorkersWeekSchedu
                 model.Add(worked_closing_shift_yesterday + shifts.get((employee.name, day, WeekendMorningShift.__name__), 0) <= 1)
             else:
                 model.Add(worked_closing_shift_yesterday + shifts.get((employee.name, day, MorningShift.__name__), 0) <= 1)
+
+
+def objective_function(week_info: WorkersWeekScheduleModel, employees: List[Employee],
+                                        model, shifts):
+    objective_terms = []
+
+    for employee in employees:
+        for day in range(len(week_info.week)):
+            for shift in week_info.week[day].shifts:
+                if week_info.week[day].day in [employee_preferences_day.day for employee_preferences_day in
+                                               employee.preferences]:
+                    preference_day_index = [employee_preferences_day.day for employee_preferences_day in
+                                            employee.preferences].index(week_info.week[day].day)
+                    if shift.__class__.__name__ in [preferred_shift.__class__.__name__ for preferred_shift in
+                                                    employee.preferences[preference_day_index].shifts]:
+                        objective_terms.append(
+                            employee.priority * shifts[(employee.name, day, shift.__class__.__name__)])
+
+    objective = sum(objective_terms)
+
+    model.Maximize(objective)

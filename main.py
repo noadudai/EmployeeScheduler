@@ -18,36 +18,15 @@ def create_schedule(employees: List[Employee], week_info: WorkersWeekScheduleMod
     # boolean value of 1 or 0 if that employee is working on that day on that shift.
     shifts = {}
 
+    # Adding variables and constraint to the model.
     populate_shifts_dict_for_cp_model(employees, this_week, model, shifts)
-
     one_employee_in_each_shift_constraint(this_week, employees, model, shifts)
-
     at_most_one_shift_a_day_constraint(this_week, employees, model, shifts)
-
     prevent_new_employees_working_together_constraint(this_week, employees, model, shifts)
-
     no_more_that_6_working_days_a_week_constraint(this_week, employees, model, shifts)
-
     employee_day_off_request_constraint(this_week, employees, model, shifts)
-
     no_opening_shift_after_closing_shift_constraint(this_week, employees, model, shifts)
-
-    objective_terms = []
-
-    for employee in employees:
-        for day in range(len(this_week.week)):
-            for shift in this_week.week[day].shifts:
-                if this_week.week[day].day in [employee_preferences_day.day for employee_preferences_day in
-                                                employee.preferences]:
-                    preference_day_index = [employee_preferences_day.day for employee_preferences_day in
-                                            employee.preferences].index(this_week.week[day].day)
-                    if shift.__class__.__name__ in [preferred_shift.__class__.__name__ for preferred_shift in
-                                                    employee.preferences[preference_day_index].shifts]:
-                        objective_terms.append(employee.priority * shifts[(employee.name, day, shift.__class__.__name__)])
-
-    objective = sum(objective_terms)
-
-    model.Maximize(objective)
+    objective_function(this_week, employees, model, shifts)
 
     # Creates the solver and solve.
     solver = cp_model.CpSolver()
