@@ -1,5 +1,5 @@
 from typing import List
-from Models.Day_model import DayModel
+from Models.Days_models.Day_model import DayModel
 from Models.Shifts_model import Shifts
 
 

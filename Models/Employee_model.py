@@ -1,7 +1,7 @@
 from typing import List
 
-from Models.Day_model import DayModel
-from Models.Day_preferences_model import DayPreferencesModel
+from Models.Days_models.Day_model import DayModel
+from Models.Days_models.Day_preferences_model import DayPreferencesModel
 
 
 class Employee:
