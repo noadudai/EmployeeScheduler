@@ -1,9 +1,9 @@
 from typing import List
 from ortools.sat.python import cp_model
 
-from Models.Days_models.Day_model import DayModel
-from Models.Days_models.Day_schedule_model import DayScheduleModel
-from Models.Days_models.Day_preferences_model import DayPreferencesModel
+from Models.Day_models.Day_model import DayModel
+from Models.Day_models.Day_schedule_model import DayScheduleModel
+from Models.Day_models.Day_preferences_model import DayPreferencesModel
 from Models.Constraint_model import ConstraintModel
 from Models.Employee_model import Employee
 from Models.Workers_week_schedule import WorkersWeekScheduleModel
