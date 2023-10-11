@@ -1,5 +1,5 @@
 from typing import List
-from Models.Day_schedule_model import DayScheduleModel
+from Models.Days_models.Day_schedule_model import DayScheduleModel
 
 
 class WorkersWeekScheduleModel:

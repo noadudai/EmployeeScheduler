@@ -1,9 +1,9 @@
 from typing import List
 from ortools.sat.python import cp_model
 
-from Models.Day_model import DayModel
-from Models.Day_schedule_model import DayScheduleModel
-from Models.Day_preferences_model import DayPreferencesModel
+from Models.Days_models.Day_model import DayModel
+from Models.Days_models.Day_schedule_model import DayScheduleModel
+from Models.Days_models.Day_preferences_model import DayPreferencesModel
 from Models.Constraint_model import ConstraintModel
 from Models.Employee_model import Employee
 from Models.Workers_week_schedule import WorkersWeekScheduleModel
@@ -55,13 +55,19 @@ def create_schedule(employees: List[Employee], week_info: WorkersWeekScheduleMod
             if solution_identifier not in previous_solution:
                 previous_solution.add(solution_identifier)
 
+                solution_days = []
                 print(f"Solution:{count}")
                 for day in range(len(this_week.week)):
                     print("Day", day)
+                    solution_days.append(DayScheduleModel(this_week.week[day].day, this_week.week[day].shifts))
                     for employee in employees:
-                        for shift in this_week.week[day].shifts:
+                        for shift in solution_days[day].shifts:
+
                             if solver.Value(shifts[(employee.name, day, shift.shift_type)]):
                                 number_of_shifts_this_week[employee.name] += 1
+
+                                shift.set_worker_name(employee.name)
+
                                 if this_week.week[day].day in [employee_preferences_day.day for employee_preferences_day in employee.preferences]:
                                     preference_day_index = [employee_preferences_day.day for employee_preferences_day in employee.preferences].index(this_week.week[day].day)
                                     if shift.shift_type in [preferred_shift.shift_type for preferred_shift in employee.preferences[preference_day_index].shifts]:
@@ -82,6 +88,8 @@ def create_schedule(employees: List[Employee], week_info: WorkersWeekScheduleMod
                 print()
                 print()
                 count += 1
+
+                week_info.add_solution(solution_days)
         else:
             print("No optimal solution found !")
 
@@ -139,5 +147,6 @@ if __name__ == "__main__":
             DayScheduleModel("Friday", [Shifts(Shifts.WEEKEND_MORNING_SHIFT_KEY), Shifts(Shifts.WEEKEND_MORNING_BACKUP_SHIFT_KEY), Shifts(Shifts.EVENING_SHIFT_KEY), Shifts(Shifts.CLOSING_SHIFT_KEY)]),
             DayScheduleModel("Saturday", [Shifts(Shifts.WEEKEND_MORNING_SHIFT_KEY), Shifts(Shifts.WEEKEND_MORNING_BACKUP_SHIFT_KEY), Shifts(Shifts.EVENING_SHIFT_KEY), Shifts(Shifts.CLOSING_SHIFT_KEY)])]
 
-    create_schedule(create_employee_list(), WorkersWeekScheduleModel(days))
+    solution = WorkersWeekScheduleModel(days)
+    create_schedule(create_employee_list(), solution)
 
