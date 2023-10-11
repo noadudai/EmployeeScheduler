@@ -1,6 +1,9 @@
 from typing import List, Dict
+
+from ortools.sat.python import cp_model
 from ortools.sat.python.cp_model import CpModel
 
+from Models.Day_models.Day_schedule_model import DayScheduleModel
 from Models.Employee_model import Employee
 from Models.Shifts_model import Shifts
 from Models.Workers_week_schedule import WorkersWeekScheduleModel
@@ -8,11 +11,11 @@ from Models.Workers_week_schedule import WorkersWeekScheduleModel
 
 class ConstraintModel:
 
-    def __init__(self, week_info: WorkersWeekScheduleModel, employees: List[Employee], model: CpModel, shifts: Dict):
+    def __init__(self, week_info: WorkersWeekScheduleModel, employees: List[Employee], model: CpModel):
         self.week_info = week_info
         self.employees = employees
         self.model = model
-        self.shifts = shifts
+        self.shifts = {}
         self._populate_shifts_dict_for_cp_model()
 
     # A function that populates the given shifts dictionary to hold employees as a (employee, day, shift)  as a key,
@@ -127,3 +130,46 @@ class ConstraintModel:
         objective = sum(objective_terms)
 
         self.model.Maximize(objective)
+
+        # Creates the solver and solve.
+        solver = cp_model.CpSolver()
+
+        previous_solution = set()
+
+        # 5 different solutions for a week working schedule.
+        count = 0
+        while count <= 4:
+            number_of_shifts_this_week = {}
+            for employee in self.employees:
+                number_of_shifts_this_week[employee.name] = 0
+
+            status = solver.Solve(self.model)
+
+            if status == cp_model.OPTIMAL:
+                solution_identifier = frozenset(
+                    (employee.name, day, shift.shift_type) for day in range(len(self.week_info.week)) for employee in
+                    self.employees for shift in self.week_info.week[day].shifts
+                    if solver.Value(self.shifts[(employee.name, day, shift.shift_type)])
+                )
+
+                if solution_identifier not in previous_solution:
+                    previous_solution.add(solution_identifier)
+
+                    solution_days = []
+                    for day in range(len(self.week_info.week)):
+
+                        solution_days.append(DayScheduleModel(self.week_info.week[day].day, self.week_info.week[day].shifts))
+
+                        for employee in self.employees:
+                            for shift in solution_days[day].shifts:
+
+                                if solver.Value(self.shifts[(employee.name, day, shift.shift_type)]):
+                                    number_of_shifts_this_week[employee.name] += 1
+
+                                    shift.set_worker_name(employee.name)
+                                    break
+                    count += 1
+
+                    self.week_info.add_solution(solution_days)
+            else:
+                print("No optimal solution found !")
