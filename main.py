@@ -38,6 +38,7 @@ def create_schedule(employees: List[Employee], week_info: WorkersWeekScheduleMod
 
     previous_solution = set()
 
+    # 5 different solutions for a week working schedule.
     count = 0
     while count <= 4:
         number_of_shifts_this_week = {}
@@ -56,9 +57,7 @@ def create_schedule(employees: List[Employee], week_info: WorkersWeekScheduleMod
                 previous_solution.add(solution_identifier)
 
                 solution_days = []
-                # print(f"Solution:{count}")
                 for day in range(len(this_week.week)):
-                    # print("Day", day)
 
                     solution_days.append(DayScheduleModel(this_week.week[day].day, this_week.week[day].shifts))
 
@@ -70,26 +69,6 @@ def create_schedule(employees: List[Employee], week_info: WorkersWeekScheduleMod
 
                                 shift.set_worker_name(employee.name)
                                 break
-
-                #                 if this_week.week[day].day in [employee_preferences_day.day for employee_preferences_day in employee.preferences]:
-                #                     preference_day_index = [employee_preferences_day.day for employee_preferences_day in employee.preferences].index(this_week.week[day].day)
-                #                     if shift.shift_type in [preferred_shift.shift_type for preferred_shift in employee.preferences[preference_day_index].shifts]:
-                #                         print(f"{employee.name} works shift {shift.shift_type} (requested).")
-                #                         break
-                #                     else:
-                #                         print(
-                #                             f"{employee.name} works shift {shift.shift_type} (not requested).")
-                #                         break
-                #                 else:
-                #                     print(f"{employee.name} works shift {shift.shift_type} (not requested).")
-                #                     break
-                #
-                # print()
-                # for name, shifts_this_week in number_of_shifts_this_week.items():
-                #     print(f"{name} got {shifts_this_week} shifts")
-                #
-                # print()
-                # print()
                 count += 1
 
                 week_info.add_solution(solution_days)
@@ -125,7 +104,6 @@ def create_employee_list() -> List[Employee]:
     misha_thursday = DayPreferencesModel("Thursday", [Shifts(Shifts.THURSDAY_BACKUP_SHIFT_KEY), Shifts(Shifts.CLOSING_SHIFT_KEY)])
     misha_friday = DayPreferencesModel("Friday", [Shifts(Shifts.WEEKEND_MORNING_BACKUP_SHIFT_KEY), Shifts(Shifts.EVENING_SHIFT_KEY), Shifts(Shifts.CLOSING_SHIFT_KEY)])
     misha_saturday = DayPreferencesModel("Saturday", [Shifts(Shifts.WEEKEND_MORNING_BACKUP_SHIFT_KEY), Shifts(Shifts.EVENING_SHIFT_KEY), Shifts(Shifts.CLOSING_SHIFT_KEY)])
-
 
     noa_preferences = [noa_sunday, noa_monday, noa_wednesday, noa_thursday, noa_friday, noa_saturday]
     chepo_preferences = [chepo_sunday, chepo_tuesday, chepo_wednesday, chepo_thursday, chepo_friday, chepo_saturday]

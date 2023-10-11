@@ -17,3 +17,11 @@ class Employee:
         self.days_off = day_offs
         self.day_off_requested = day_off_request
         self.__class__.instances.append(self)
+
+    def update_preferences(self, preferences: List[DayPreferencesModel]):
+        self.preferences = preferences
+
+    def update_day_offs(self, day_offs: List[DayModel], day_off_request: bool = False):
+        # Default value of False, meaning the employee did not ask for a day off in advanced.
+        self.days_off = day_offs
+        self.day_off_requested = day_off_request
