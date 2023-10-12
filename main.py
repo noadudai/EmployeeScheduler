@@ -73,7 +73,7 @@ def create_employee_list() -> List[Employee]:
     beny = Employee("Beny", beny_preferences, 4, False, [DayModel("Thursday")], True)
     misha = Employee("Misha", misha_preferences, 2, True, [], False)
 
-    return Employee.instances
+    return [noa, chepo, beny, misha]
 
 
 if __name__ == "__main__":
